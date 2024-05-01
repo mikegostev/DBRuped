@@ -1,0 +1,2 @@
+${How old:PREDICATE=dbo:birthDate} is ${*:RESOURCE}
+What is the ${birth name:PREDICATE=dbp:birthname;dbp:birthName;dbo:birthName;dbo:birthname} of ${*:RESOURCE}
