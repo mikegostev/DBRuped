@@ -2,19 +2,19 @@
 
 ## What it is
 
-**DBRuped** is an online service that enables communication with **DBpedia** using natural languages. You can type your questions in English (or other languages) and get required data from DBpedia. Of course the right answer is not guaranteed. It depends on existence of required information in DBpedia and also ability of the system to convert you question to the right SPARQL query that highly depend on the question itself. 
+**DBRuped** is an online service that facilitates communication with **DBpedia** using natural languages. You can type your questions in English (or other languages) and retrieve the required data from DBpedia. However, please note that the accuracy of the answers is not guaranteed. It depends on the availability of the required information in DBpedia and the system's ability to convert your question into the appropriate SPARQL query, which largely depends on the question itself.
 
 ## Why DBRuped was created
 
-**DBRuped** is an attempt of creative expansion of a challenge task for a candidate in SciBite company. No business ideas are connected to this project.
+**DBRuped** is an endeavour aimed at creatively expanding a challenge task for a candidate at SciBite company. This project is not associated with any business ideas.
 
 ## How DBRuped works
 
-**DBRuped** converts incoming NL (natural language) question into SPARQL query and that submit this query to DBpedia. With some chance it can return a reasonable answer. **DBRuped** converts NL queries with two ways. At first it utilises a set of predefined templates. It tries to find a template that matches an NL sentence and that build a SPARQL query according to the selected template. Apart from a query a template defines a one or more pattern for output formatting. If no pattern found for the sentence **DBRuped** switches to the second way. It connects to ChatGPT and send a prompt that requests converting NL sentence to DBpedia SPARQL query. With some chance (not so bad in general) ChatGPT provides a reasonable query that then is executed by DBpedia.
+**DBRuped** converts incoming natural language (NL) questions into SPARQL queries and submits them to DBpedia. With some chance, it can return a reasonable answer. **DBRuped** converts NL queries in two ways. Firstly, it utilizes a set of predefined templates. It attempts to find a template that matches an NL sentence and then builds a SPARQL query according to the selected template. In addition to a query, a template defines one or more patterns for output formatting. If no template is found for the sentence, **DBRuped** switches to the second method. It connects to ChatGPT and sends a prompt requesting the conversion of the NL sentence to a DBpedia SPARQL query. With some chance (which is generally not bad), ChatGPT provides a reasonable query that is then executed by DBpedia.
 
 ## How template definition looks like 
 
-Templates are currently defined in a file */src/main/resources/templates/QuestionTemplates.txt* within the source tree. One file can hold multiple templates. Here is an example:
+Templates are currently defined in the file */src/main/resources/templates/QuestionTemplates.txt* within the source tree. One file can contain multiple templates. Here is an example:
 
 ```## Age related questions ##
 #QUESTION: How old is ${PERSON}?
@@ -36,18 +36,21 @@ dbr:${PERSON:space2underscore} dbo:birthDate ?dob .
 
 ## Template definition structure
 
-Template definition consists of three section: QUESTION, QUERY and RETURN. QUESTION section may have multiple entries. Any entry can match to let the template be selected. A question can have variable capturing place holders that match any substring and  capture such substring to a correspondent variable. Such variables can be used then in QUERY and RETURN sections.
-QUERY section contains a SPARQL query that serves the above questions. This section can also have place holders but not for capturing but rather for substitution. It can be direct variable substitution like `${PERSON}` and also substitution with pre-processing `${PERSON:space2underscore}` where `space2underscore` is one (or more) of predefined functions.
-When query is executed all names from the SELECT statement will form the new variables that will have values return by a query. These variables will be combined with variables from the QUESTION section. Only one entry in QUERY section is possible.
-The RETURN section contains a text that can have substitution place holders like in QUERY section. RETURN section may have multiple entries but each entry must have a unique tag in square brackets. Absence of bracket means an empty tag so RETURN and RETURN[] are equivalent definitions. One or another form of output can be selected by tags. By default Web UI tries to find an output with the LONG tag and if not found takes the first entry regardless it's tag. Pre-processing functions are also allowed in the RETURN section. 
+The template definition consists of three sections: QUESTION, QUERY, and RETURN. The QUESTION section may have multiple entries, and any entry can match to allow the template to be selected. A question can have variable capturing placeholders that match any substring and capture such substrings into corresponding variables. These variables can then be used in QUERY and RETURN sections.
+
+The QUERY section contains a SPARQL query that serves the above questions. This section can also have placeholders but not for capturing; rather, for substitution. It can be direct variable substitution like `${PERSON}`, and also substitution with pre-processing `${PERSON:space2underscore}`, where `space2underscore` is one (or more) of the predefined functions.
+
+When the query is executed, all names from the SELECT statement will form new variables that will have values returned by the query. These variables will be combined with variables from the QUESTION section. Only one entry in the QUERY section is possible.
+
+The RETURN section contains text that can have substitution placeholders like in the QUERY section. The RETURN section may have multiple entries, but each entry must have a unique tag in square brackets. Absence of brackets means an empty tag, so RETURN and RETURN[] are equivalent definitions. One or another form of output can be selected by tags. By default, the Web UI tries to find an output with the LONG tag, and if not found, takes the first entry regardless of its tag. Pre-processing functions are also allowed in the RETURN section.
 
 ## Pre-processing functions
 
-Pre-processing functions convert a value of a variable before substitution. Multiple functions can be applied like ${VAR:FUNC1:FUNC2}. Currently the following functions are defined (refer */src/main/java/me/gostev/scibite/dbruped/text/SimpleSubstitutorAndEvaluator.java*)
+Pre-processing functions convert a variable's value before substitution. Multiple functions can be applied, such as ${VAR:FUNC1:FUNC2}. Currently, the following functions are defined (refer to /src/main/java/me/gostev/scibite/dbruped/text/SimpleSubstitutorAndEvaluator.java):
  - **space2underscore**
  - **date2year**
  - **date2age**
- More functions can be easily defined.
+Additional functions can be easily defined.
 
 # Installation
 

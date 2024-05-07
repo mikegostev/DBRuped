@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -13,6 +15,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Component("dbpedia")
 public class DbPediaConnector {
 	public static String DBPEDIA_API_URL = "https://dbpedia.org/sparql";
+
+	private static Logger logger = LoggerFactory.getLogger(DbPediaConnector.class);
 
 	/**
 	 * Returns a data according to provided query.
@@ -32,6 +36,8 @@ public class DbPediaConnector {
 				.retrieve()
 				.bodyToMono(Response.class)
 				.block();
+
+		logger.debug("Got response from DBPedia");
 
 		Map<String, String> resultMap = Collections.emptyMap();
 

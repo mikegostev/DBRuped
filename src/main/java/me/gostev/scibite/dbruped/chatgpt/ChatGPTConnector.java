@@ -1,5 +1,7 @@
 package me.gostev.scibite.dbruped.chatgpt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -14,6 +16,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class ChatGPTConnector {
 	public static String CHATGPT_API_URL = "https://api.openai.com/v1/chat/completions";
 	public static String CHATGPT_API_KEY = System.getenv("CHATGPT_API_KEY");
+
+	private static Logger logger = LoggerFactory.getLogger(ChatGPTConnector.class);
 
 	/**
 	 * Send a prompt to ChatGPT and returns it's response.
@@ -51,17 +55,23 @@ public class ChatGPTConnector {
 			return "ERROR: " + e.getMessage();
 		}
 
-		Response response = webClient.post()
-				.body(BodyInserters.fromValue(jsonString))
-				.retrieve()
-				.bodyToMono(Response.class)
-				.block();
+		try {
+			Response response = webClient.post()
+					.body(BodyInserters.fromValue(jsonString))
+					.retrieve()
+					.bodyToMono(Response.class)
+					.block();
 
-		if (response.getChoices() != null && response.getChoices().size() > 0
-				&& response.getChoices().get(0).getMessage() != null) {
-			String reply = response.getChoices().get(0).getMessage().getContent();
+			logger.debug("Response from ChatGPT received");
 
-			return reply != null ? reply : "";
+			if (response.getChoices() != null && response.getChoices().size() > 0
+					&& response.getChoices().get(0).getMessage() != null) {
+				String reply = response.getChoices().get(0).getMessage().getContent();
+
+				return reply != null ? reply : "";
+			}
+		} catch (Exception e) {
+			logger.error("ChatGPT communication failed: " + e.getMessage(), e);
 		}
 
 		return "";
