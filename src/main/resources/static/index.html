@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<link rel="stylesheet" href="./style.css" />
+<!--  Fonts -->
+<link
+	href="https://fonts.googleapis.com/css2?family=Poppins&display=swap"
+	rel="stylesheet" />
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="icon" type="image/png" href="icon.png">
+<meta name="description"
+	content="Query DBpedia with natural language questions">
+<meta name="author" content="Mike Gostev">
+<title>Query DBpedia with natural language questions</title>
+<!--  Code syntax highlighting -->
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+<!--  Interactive demo only -->
+</head>
+
+<body>
+
+	<H1>Query DBpedia with natural language questions</H1>
+
+	<div class="flex-container">
+
+		<div id="outputDiv" class="flex-child"></div>
+
+		<div class="flex-child code-block">
+			<pre>
+				<code class="javascript" id="sparql"></code>
+			</pre>
+		</div>
+
+	</div>
+	<div style="display: flex; margin-top: 10px">
+		<input id="input" placeholder="Type your message and press enter" />
+		<button class="sendButton" id="sendButton">Send</button>
+	</div>
+</body>
+<script>
+const apiUrl = '/api/question';
+const resourcePrefix = 'http://dbpedia.org/resource/';
+
+var codeBlock = document.getElementById("sparql");
+var outputBlock = document.getElementById("outputDiv");;
+var input = document.getElementById("input");
+var button = document.getElementById("sendButton"); 
+
+function putMessage(message, publisher) {
+	var box = outputBlock;
+	box.innerHTML += newRow(message, publisher);
+	box.scrollTop = box.scrollHeight;
+}
+
+var id = 'user_' + Math.random();
+var historyBuffer = new Array();
+var historyPointer=-100;
+
+function sendQuestion(e) {
+	if( e.keyCode == 38 && history.length > 0 && historyPointer >0 ) {
+		historyPointer--;
+		input.value = historyBuffer[historyPointer];
+	}
+	
+	if( e.keyCode == 40 && history.length > 0 && historyPointer >=0 && historyPointer < historyBuffer.length-1 ) {
+		historyPointer++;
+		input.value = historyBuffer[historyPointer];
+	}
+}
+
+function sendQuestion() {
+	if( input.value == "" ) {
+		return;
+	}
+	
+	putMessage(input.value, id);
+	codeBlock.innerHTML = '';
+	
+	historyBuffer.push(input.value);
+	historyPointer=historyBuffer.length;
+	
+	fetch(apiUrl + "?question=" + encodeURIComponent(input.value)).then(response => {
+		return response.json();
+	}).then(data => {
+		var answerText = data.answersMap["LONG"];
+		
+		if( answerText == null ) {
+			answerText = data.answerText;
+		}
+		
+      	putMessage(answerText,data.valid?data.nlProcessor:"ERROR");
+
+		codeBlock.appendChild(document.createTextNode(data.sparqlQuery));
+		hljs.highlightAll();
+		input.value = ''
+	}).catch(err => {
+		// Do something for an error here
+	});
+}
+
+
+(function() {
+	var box = outputBlock;
+
+	input.addEventListener('keyup', function(e) {
+		if( e.keyCode == 38 && history.length > 0 && historyPointer >0 ) {
+			historyPointer--;
+			input.value = historyBuffer[historyPointer];
+		}
+		
+		if( e.keyCode == 40 && history.length > 0 && historyPointer >=0 && historyPointer < historyBuffer.length-1 ) {
+			historyPointer++;
+			input.value = historyBuffer[historyPointer];
+		}
+	})
+	
+	button.addEventListener('click', sendQuestion);
+	input.addEventListener('keypress', function(e) {
+		
+		if ((e.keyCode || e.charCode) === 13) {
+			sendQuestion();
+		}
+
+	});
+})();
+
+
+function newRow(m, publisher) {
+	var date = "<br><span class='messageTime'>" + new Date().toLocaleString() + "</span>";
+	var you = "";
+	var messageClass = "messageThem";
+
+	var message = '' + m;
+
+	if (message.startsWith(resourcePrefix)) {
+		var url = message
+		message = "<a target='_blank' href=\"" + url + "\">"
+			+ message.substring(resourcePrefix.length).replace("_", " ")
+			+ "</a>"
+	} else {
+		message = ('' + m).replace(/[<>]/g, '');
+	}
+
+
+	if (id === publisher) {
+		you = "<span class='youText'> (You)</span>";
+		messageClass = "messageYou"
+	}
+	else {
+		you = "<span class='youText'> (" + publisher + ")</span>";
+		switch (publisher) {
+			case "CHATGPT":
+				messageClass += " chatGPTAnswer";
+				break;
+			case "TEMPLATE":
+				messageClass += " templateAnswer";
+				break;
+			case "ERROR":
+				messageClass += " errorAnswer";
+				break;
+		}
+	}
+	return "<div class='" + messageClass + "'>" + message + you + date + "</div>"
+}
+</script>
+</html>

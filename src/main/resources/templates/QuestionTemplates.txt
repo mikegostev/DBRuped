@@ -1,2 +1,33 @@
-${How old:PREDICATE=dbo:birthDate} is ${*:RESOURCE}
-What is the ${birth name:PREDICATE=dbp:birthname;dbp:birthName;dbo:birthName;dbo:birthname} of ${*:RESOURCE}
+##  Age related questions  ##
+#QUESTION: How old is ${PERSON}?
+#QUESTION: What is the age of ${PERSON}?
+#QUESTION: What is ${PERSON}'s age?
+#QUERY:
+prefix dbr: <http://dbpedia.org/resource/>
+prefix dbp: <http://dbpedia.org/property/>
+prefix dbo: <http://dbpedia.org/ontology/>
+
+SELECT  ?dob
+FROM <http://dbpedia.org>
+WHERE {
+       dbr:${PERSON:space2underscore} dbo:birthDate  ?dob .
+  } LIMIT 1
+#RETURN: ${dob:date2age}
+#RETURN[LONG]: The age of ${PERSON} is ${dob:date2age} (DoB: ${dob})
+
+##  Birth place related questions ##
+#QUESTION: What is the birth name of ${PERSON}?
+#QUESTION: What is birth name of ${PERSON}?
+#QUERY:
+prefix dbr: <http://dbpedia.org/resource/>
+prefix dbp: <http://dbpedia.org/property/>
+prefix dbo: <http://dbpedia.org/ontology/>
+
+SELECT  ?name
+FROM <http://dbpedia.org>
+WHERE {
+       dbr:${PERSON:space2underscore} ?p ?name .
+FILTER (?p IN (dbp:birthname, dbp:birthName, dbo:birthName,dbo:birthname) )
+} LIMIT 1
+#RETURN: ${name}
+#RETURN[LONG]: The birth name of ${PERSON} is ${name}
